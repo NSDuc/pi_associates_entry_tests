@@ -1,0 +1,11 @@
+.idea
+.git
+.gitignore
+.dockerignore
+setup.sh
+docker-compose*.yaml
+Dockerfile
+LICENSE
+tests
+venv
+data
