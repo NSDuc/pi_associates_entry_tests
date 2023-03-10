@@ -1,6 +1,11 @@
+.idea
+.git
 .gitignore
-docker-compose.yaml
+.dockerignore
+setup.sh
+docker-compose*.yaml
 Dockerfile
 LICENSE
-data
 tests
+venv
+data
