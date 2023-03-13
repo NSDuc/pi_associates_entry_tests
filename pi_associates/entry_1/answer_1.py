@@ -1,6 +1,6 @@
 from pi_associates_library.config_loader import EnvironConfigLoader
-from pi_associates_library.job_runner import ProcessJobRunner, ThreadJobRunner, JobRunner
-from pi_associates_library.kisvn.kisvn_persistent import KisvnTickCSVFile, KisvnTickStorage
+from pi_associates_library.job_runner import ThreadJobRunner, JobRunner
+from pi_associates_library.kisvn.kisvn_tick_storage import KisvnTickCSVFile, KisvnTickStorage
 from pi_associates_library.kisvn.kisvn_scraper import KisvnTickScraper
 from datetime import datetime
 import logging
@@ -11,17 +11,17 @@ if __name__ == '__main__':
     job_runner: JobRunner = ThreadJobRunner()
     config: dict = EnvironConfigLoader().load_config()
 
-    base_dirpath = config.get('PI_ASSOCIATES_KISVN_RAW_DATA_DIRPATH')
+    raw_tickdata_dirpath = config.get('PI_ASSOCIATES_KISVN_RAW_DATA_DIRPATH')
     log_dirpath = config.get('PI_ASSOCIATES_KISVN_LOG_DIRPATH')
-    symbol_list = config.get('PI_ASSOCIATES_VNINDEX_SYMBOLS').split(',')
+    vn30_symbols = config.get('PI_ASSOCIATES_VN30_SYMBOLS').split(',')
 
-    now = datetime.now().strftime("%H-%M-%S")
+    now = datetime.now().strftime("%H%M%S")
     logging.basicConfig(filename=os.path.join(log_dirpath, f'{now}.log'), level=logging.DEBUG)
     logging.getLogger().addHandler(logging.StreamHandler())
 
-    for symbol in symbol_list:
+    for symbol in [*vn30_symbols, 'VN30']:
         tick_storage : KisvnTickStorage = KisvnTickCSVFile(stock=symbol,
-                                                           base_dirpath=base_dirpath)
+                                                           data_dirpath=raw_tickdata_dirpath)
         tick_scraper = KisvnTickScraper(symbol=symbol,
                                         tick_storage=tick_storage)
 

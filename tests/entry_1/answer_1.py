@@ -1,6 +1,6 @@
 from pi_associates_library.config_loader import DotenvConfigLoader
 from pi_associates_library.job_runner import JobRunner, ThreadJobRunner
-from pi_associates_library.kisvn.kisvn_persistent import KisvnTickStorage, KisvnTickCSVFile
+from pi_associates_library.kisvn.kisvn_tick_storage import KisvnTickStorage, KisvnTickCSVFile
 from pi_associates_library.kisvn.kisvn_scraper import KisvnTickScraper
 from unittest import TestCase
 
@@ -18,7 +18,7 @@ class TestAnswer1(TestCase):
         for symbol in symbols:
             if symbol != 'NVL':
                 continue
-            tick_storage: KisvnTickStorage = KisvnTickCSVFile(stock=symbol, base_dirpath=dirpath)
+            tick_storage: KisvnTickStorage = KisvnTickCSVFile(stock=symbol, data_dirpath=dirpath)
             tick_scraper = KisvnTickScraper(symbol=symbol, tick_storage=tick_storage)
 
             self.job_runner.create_job(job_name=symbol,

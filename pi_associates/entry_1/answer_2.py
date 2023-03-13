@@ -1,69 +1,52 @@
-from datetime import date, timedelta
+from pi_associates_library.kisvn.kisvn_tick_processor import KisvnTickProcessor
+from pi_associates_library.kisvn.kisvn_tick_storage import KisvnTickCSVFile, KisvnTickStorage
+from pi_associates_library.config_loader import EnvironConfigLoader
+from datetime import datetime
 import pandas as pd
 
-from pi_associates_library.kisvn.kisvn_persistent import KisvnTickCSVFile, KisvnTickStorage, \
-    KisvnProcessedTickPersistent, KisvnProcessedTickCSVFile
-from pi_associates_library.job_runner import ProcessJobRunner, ThreadJobRunner, JobRunner
-from pi_associates_library.config_loader import DotenvConfigLoader
-from datetime import datetime
+
+def init_pandas():
+    pd.set_option('display.max_columns', None)
+    # pd.set_option('display.max_rows', None)
+    pd.set_option('expand_frame_repr', False)
 
 
-class KisvnTickProcessor:
-    def __init__(self, source: KisvnTickStorage, dest: KisvnProcessedTickPersistent):
-        self.source = source
-        self.dest = dest
-
-    def process(self, date: datetime):
-        pass
+def print_dataframe(df: pd.DataFrame, header):
+    print(f'=============={header}=================')
+    print(df.info())
+    print(f'index is mono increase {df.index.is_monotonic_increasing}')
+    print(df)
+    print()
 
 
 if __name__ == '__main__':
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_rows', None)
-    pd.set_option('expand_frame_repr', False)
+    init_pandas()
 
-    param_today = datetime.now() - timedelta(days=1)
-
-    job_runner: JobRunner = ThreadJobRunner()
-    config: dict = DotenvConfigLoader().load_config()
+    config: dict = EnvironConfigLoader().load_config()
 
     raw_dirpath = config.get('PI_ASSOCIATES_KISVN_RAW_DATA_DIRPATH')
-    processed_dirpath = config.get('PI_ASSOCIATES_KISVN_PROCESSED_DATA_DIRPATH')
-    symbol_list = config.get('PI_ASSOCIATES_VNINDEX_SYMBOLS').split(',')
+    prc_dirpath = config.get('PI_ASSOCIATES_KISVN_PROCESSED_DATA_DIRPATH')
+    vn30_symbols = config.get('PI_ASSOCIATES_VN30_SYMBOLS').split(',')
 
-    for symbol in symbol_list:
-        print(f'stock = {symbol}')
-        tick_storage: KisvnTickStorage = KisvnTickCSVFile(stock=symbol,
-                                                          base_dirpath=raw_dirpath)
-        processed_tick_storage: KisvnProcessedTickPersistent = KisvnProcessedTickCSVFile(stock=symbol,
-                                                                                         data_dirpath=raw_dirpath)
+    param_today = datetime.today()
+    for symbol in vn30_symbols:
+        src_tick_storage: KisvnTickStorage = KisvnTickCSVFile(stock=symbol, data_dirpath=raw_dirpath)
+        dst_tick_storage: KisvnTickStorage = KisvnTickCSVFile(stock=symbol, data_dirpath=prc_dirpath)
 
-        df0 = tick_storage.select_all(date=param_today)
-        df1: pd.DataFrame = df0.drop_duplicates(subset=None,
-                                                keep='first',
-                                                inplace=False,
-                                                ignore_index=False)
-        # print(df1.info())
-        # print(df1)
-        # print(df1.index)
-        print(f"\n{'*'*20}\ndf2")
-        # df2: pd.DataFrame = df1[['t', 'mv', 'vo']]
-        df2 = df1
-        df2 = df2.sort_values(by=['vo'], ascending=False, ignore_index=False)
+        df0 = src_tick_storage.read_tickdata(trade_date=param_today)
 
-        print(df2.info())
-        print(df2)
-        print(f"\n{'*' * 20}\ndf2")
+        df1 = KisvnTickProcessor.clean_raw_tickdata(df0)
 
-        df2 = df2[['t', 'vo', 'mv']]
-        df2['calculate_vo'] = df2.apply(lambda row: row.vo + row.mv, axis=1)
-        df2['t'] = df2.apply(lambda row: datetime.strptime(row.t, "%H%M%S").time(), axis=1)
-        print(df2['vo'].is_monotonic_increasing)
+        dst_tick_storage.overwrite_tickdata(df1, trade_date=param_today)
 
-        df3 = pd.merge(df2, df2,
-                       how='outer',
-                       left_on='calculate_vo', right_on='vo')
-        # %H%M%S
-        print(f"\n{'*'*20}\ndf3")
-        print(df3)
-        exit(0)
+        # df3 = df1[['t', 'vo', 'mv']]
+        # df3['final_vo'] = df1.apply(lambda row: row.vo + row.mv, axis=1)
+        # df1['t'] = df1.apply(lambda row: datetime.strptime(row.t, "%H%M%S").time(), axis=1)
+        #
+        # df3 = pd.merge(df1, df1,
+        #                how='outer',
+        #                left_on='final_vo', right_on='vo')
+        # # %H%M%S
+        # print(f"\n{'*'*20}\ndf3")
+        # print(df3)
+        # exit(0)
