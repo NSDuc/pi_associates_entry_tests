@@ -96,7 +96,16 @@ Lưu tick bằng file CSV làm persistent vì:
 python3 answer.py --process-name raw --process-dates $PROCESS_DATES --process-symbols $PROCESS_SYMBOLS --log-level $PROCESS_LOGLEVEL
 ```
 
+##### MUST run for later analyze
+```shell
+PROCESS_DATES="16-03-2023,17-03-2023"
+PROCESS_SYMBOLS="ACB,BCM,BID,BVH,CTG,FPT,GAS,GVR,HDB,HPG,MBB,MSN,MWG,NVL,PDR,PLX,POW,SAB,SSI,STB,TCB,TPB,VCB,VHM,VIB,VIC,VJC,VNM,VPB,VRE"
+PROCESS_LOGLEVEL="INFO"
+python3 answer.py --process-name raw --process-dates $PROCESS_DATES --process-symbols $PROCESS_SYMBOLS --log-level $PROCESS_LOGLEVEL
+```
+
 #### Example
+
 ```shell 
 # Success run
 PROCESS_DATES="17-03-2023"
