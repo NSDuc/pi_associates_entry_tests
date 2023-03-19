@@ -6,4 +6,4 @@ chmod -R 777 data
 cp -Trv sample data
 
 docker build -t pi_associates:syduc -f Dockerfile .
-docker-compose up -d || docker-compose restart
+docker-compose restart || docker-compose up -d
