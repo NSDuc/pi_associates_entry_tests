@@ -1,5 +1,5 @@
 
-class BinanceHttpEndpoint:
+class BinanceHttpUrl:
     @staticmethod
     def ORDERBOOK(symbol):
         return f"https://fapi.binance.com/fapi/v1/depth?symbol={symbol}&limit=1000"
@@ -9,7 +9,7 @@ class BinanceHttpEndpoint:
         return f"https://fapi.binance.com/fapi/v1/trades?symbol={symbol}&limit={limit}"
 
 
-class BinanceWebSocket:
+class BinanceWebSocketUrl:
     # Aggregate Trade Streams
     # Only market trades will be aggregated, which means the insurance fund trades and ADL trades won't be aggregated.
     @staticmethod

@@ -1,5 +1,5 @@
-import os
 import dotenv
+import os
 
 
 class ConfigLoader:

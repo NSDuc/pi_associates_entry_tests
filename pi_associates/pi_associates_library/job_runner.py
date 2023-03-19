@@ -1,4 +1,3 @@
-import asyncio
 from multiprocessing import Process
 from threading import Thread
 
@@ -42,18 +41,3 @@ class ThreadJobRunner(JobRunner):
 
     def wait_all(self):
         [thread.join() for _, thread in self.jobs.items()]
-
-#
-# class CoroutinJobRunner(JobRunner):
-#     def create_job(self, job_name, target, args):
-#         self.jobs[job_name] = (target, args)
-#         self.coroutins = {}
-#
-#     def run_all(self):
-#         a = [asyncio.get_event_loop().run_in_executor(None, target, args)
-#          for target, args in self.jobs.items()]
-#         for i in a:
-#             asyncio.wait_for(i)
-#
-#     def wait_all(self):
-#         asyncio.w

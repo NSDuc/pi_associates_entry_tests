@@ -3,7 +3,7 @@ import requests
 from pi_associates_library.binance.binance_depth_stream import DiffDepthStream
 from pi_associates_library.binance.binance_orderbook import BinanceOrderbook, BinanceOrderbookBuilder
 from pi_associates_library.binance.binance_orderbook_storage import BinanceOrderbookStorage
-from pi_associates_library.binance.binance_url import BinanceWebSocket
+from pi_associates_library.binance.binance_url import BinanceWebSocketUrl
 from tenacity import retry, stop_after_attempt
 from typing import Optional
 import enum
@@ -44,7 +44,7 @@ class BinanceOrderbookScraper:
 
     @retry(stop=stop_after_attempt(1))
     async def scrape(self):
-        async with websockets.connect(BinanceWebSocket.DIFF_BOOK_DEPTH_STREAM(self.symbol)) as ws:
+        async with websockets.connect(BinanceWebSocketUrl.DIFF_BOOK_DEPTH_STREAM(self.symbol)) as ws:
             orderbook = None
             last_stream = None
             while True:

@@ -1,54 +1,70 @@
-from datetime import datetime
+from typing import Optional
+from datetime import date
 import os.path
 import pandas as pd
 
 
-class KisvnTickStorage:
-    def __init__(self, stock):
-        self.stock = stock
+class KisvnTickDateStorage:
+    def __init__(self, symbol):
+        self.symbol = symbol
 
-    def add_tickdata(self, df: pd.DataFrame, trade_date):
+    def insert_into(self, df: Optional[pd.DataFrame], **kwargs):
         raise NotImplementedError
 
-    def overwrite_tickdata(self, df: pd.DataFrame, trade_date):
+    def truncate(self, df: pd.DataFrame, **kwargs):
         raise NotImplementedError
 
-    def read_tickdata(self, trade_date) -> pd.DataFrame:
+    def recreate_storage(self, df: pd.DataFrame, **kwargs):
+        raise NotImplementedError
+
+    def select_all(self, **kwargs) -> pd.DataFrame:
         raise NotImplementedError
 
 
-class KisvnTickCSVFile(KisvnTickStorage):
-    def __init__(self, stock, data_dirpath):
-        super().__init__(stock)
-        self.data_dirpath = data_dirpath
+class KisvnRawTickCSVFile(KisvnTickDateStorage):
+    def __init__(self, symbol, datadir, trade_date: date):
+        super().__init__(symbol)
+        self.filedir = os.path.join(datadir, trade_date.strftime("%d%m%Y"))
+        self.filepath = os.path.join(self.filedir, f'{symbol}.csv')
+        os.makedirs(self.filedir, exist_ok=True)
 
-    def __get_tick_file_path(self, trade_date: datetime):
-        partition_dirname = trade_date.strftime("%d%m%Y")
-        partition_dirpath = os.path.join(self.data_dirpath, partition_dirname)
-        os.makedirs(partition_dirpath, exist_ok=True)
+    def insert_into(self, df: Optional[pd.DataFrame], **kwargs):
+        if (df is None) or df.empty:
+            return
 
-        filepath = os.path.join(partition_dirpath, f"{self.stock}.csv")
-        return filepath
-
-    def add_tickdata(self, df: pd.DataFrame, trade_date):
-        filepath = self.__get_tick_file_path(trade_date)
-        df.to_csv(path_or_buf=filepath,
+        df.to_csv(path_or_buf=self.filepath,
                   mode='a',
                   index=False,
-                  header=not os.path.exists(filepath))
+                  header=not os.path.exists(self.filepath))
 
-    def overwrite_tickdata(self, df: pd.DataFrame, trade_date):
-        filepath = self.__get_tick_file_path(trade_date)
-        df.to_csv(path_or_buf=filepath,
+    def truncate(self, df: pd.DataFrame, **kwargs):
+        os.remove(self.filepath)
+
+    def recreate_storage(self, df: pd.DataFrame, **kwargs):
+        df.to_csv(path_or_buf=self.filepath,
                   mode='w',
                   index=False,
                   header=True)
 
-    def read_tickdata(self, trade_date):
-        filepath = self.__get_tick_file_path(trade_date)
+    def select_all(self, **kwargs) -> pd.DataFrame:
         data_type = {
-            't' : str,
-            'mv': int,
-            'vo': int
+            't': str,
+            # 'mv': int,
+            # 'vo': int
         }
-        return pd.read_csv(filepath, dtype=data_type)
+        return pd.read_csv(self.filepath, dtype=data_type)
+
+
+class KisvnTickStorageReader:
+    def select_all(self) -> pd.DataFrame:
+        raise NotImplementedError
+
+
+class KisvnTickCSVFilesReader(KisvnTickStorageReader):
+    def __init__(self, symbol, datadir, trade_dates):
+        self.symbol = symbol
+        self.datadir = datadir
+        self.tick_date_storages = [KisvnRawTickCSVFile(symbol, datadir, td) for td in trade_dates]
+
+    def select_all(self) -> pd.DataFrame:
+        return pd.concat([storage.select_all() for storage in self.tick_date_storages])

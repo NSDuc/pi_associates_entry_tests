@@ -1,11 +1,14 @@
+# common
 requests~=2.28.2
 pandas~=1.5.3
-websockets~=10.4
-tenacity~=8.2.2
-matplotlib~=3.7.1
-websocket-client~=1.5.1
-# compatible with banggia.vps.com.vn socketio verison
-python-engineio~=3.14.2
-python-socketio[client]==4.6.0
 python-dotenv~=1.0.0
 numpy~=1.24.2
+tenacity~=8.2.2
+# websockets~=10.4
+# matplotlib~=3.7.1
+# websocket-client~=1.5.1
+
+# VPS
+# compatible with banggia.vps.com.vn socketio verison
+# python-engineio~=3.14.2
+# python-socketio[client]==4.6.0

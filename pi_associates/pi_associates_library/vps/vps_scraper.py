@@ -1,6 +1,5 @@
 from pi_associates_library.vps.vps_url import VPSWebSocketUrl
 from tenacity import retry, stop_after_attempt, wait_fixed
-from pprint import pprint
 from typing import Optional
 import json
 import logging
@@ -8,12 +7,11 @@ import socketio
 import threading
 
 
-class VPSDataStorage:
+class VPSWebSocketScraperHandler:
     def __init__(self, symbol_list):
-        self.symbol_list = symbol_list
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.symbol_list = symbol_list
         self._locks = {sym: threading.Lock() for sym in symbol_list}
-        self._gb_lock = threading.Lock()
 
     def on_websocket_update_board_event(self, data):
         if 'sym' not in data:
@@ -21,7 +19,7 @@ class VPSDataStorage:
         sym = data['sym']
 
         with self._locks.get(sym):
-            self.logger.info(f"[{sym} BOARD] {data}\n")
+            self.logger.info(f"[message 'board' for {sym}] {data}")
 
     def on_websocket_update_stock_event(self, data):
         if 'sym' not in data:
@@ -29,15 +27,15 @@ class VPSDataStorage:
         sym = data['sym']
 
         with self._locks.get(sym):
-            self.logger.info(f"[{sym} STOCK] {data}\n")
+            self.logger.info(f"[message 'event' for {sym}] {data}")
 
 
 class VPSWebSocketScraper:
     def __init__(self, symbol_list,
-                 vps_websocket_data_handler: Optional[VPSDataStorage] = None):
+                 vps_websocket_handler: Optional[VPSWebSocketScraperHandler] = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.symbol_list = symbol_list
-        self.vps_websocket_data_handler = vps_websocket_data_handler
+        self.vps_websocket_data_handler = vps_websocket_handler
 
     @retry(stop=stop_after_attempt(5))
     def init_websocket_connection(self):
@@ -47,7 +45,7 @@ class VPSWebSocketScraper:
 
         @sio.event
         def connect():
-            self.logger.info('[CONNECTION] connection established')
+            self.logger.info('Connection established')
             regs_data = {
                 "action": "join",
                 "list": ",".join([sym for sym in self.symbol_list]),
@@ -65,7 +63,7 @@ class VPSWebSocketScraper:
 
         @sio.event
         def disconnect():
-            self.logger.info('[CONNECTION] disconnected from server')
+            self.logger.info('Disconnected from server')
 
         return sio
 
@@ -74,4 +72,3 @@ class VPSWebSocketScraper:
         sio = self.init_websocket_connection()
         sio.connect(VPSWebSocketUrl.BG_DATAFEED(), transports=['websocket'])
         sio.wait()
-        # time.sleep(3)

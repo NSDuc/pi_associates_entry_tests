@@ -1,7 +1,7 @@
 import pandas as pd
 import requests
 from pi_associates_library.binance.binance_depth_stream import DiffDepthStream
-from pi_associates_library.binance.binance_url import BinanceHttpEndpoint
+from pi_associates_library.binance.binance_url import BinanceHttpUrl
 
 
 class BinanceOrderbook:
@@ -17,7 +17,7 @@ class BinanceOrderbook:
 class BinanceOrderbookBuilder:
     @staticmethod
     def create_from_http_endpoint(symbol, session=None):
-        url = BinanceHttpEndpoint.ORDERBOOK(symbol)
+        url = BinanceHttpUrl.ORDERBOOK(symbol)
         if session:
             response = session.get(url)
         else:

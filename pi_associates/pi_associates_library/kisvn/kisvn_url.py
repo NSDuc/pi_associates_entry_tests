@@ -1,5 +1,5 @@
 
-class KisvnEndpoint:
+class KisvnHttpURL:
     MAX_REALTIME_TICKS_NUMBER_PER_REQUEST = 100
 
     @staticmethod
